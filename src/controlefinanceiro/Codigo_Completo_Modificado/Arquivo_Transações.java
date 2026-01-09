@@ -1,33 +1,54 @@
-package Controle_Financeiro;
+package Controle_Financeiro; 
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Arquivo_Transacoes {
-    private String arquivo = "transacoes.csv";
 
-    public void salvar(List<Controle_Financeiro.Transacao> lista) throws Exception {
-        try (PrintWriter out = new PrintWriter(new FileWriter(arquivo))) {
-            for (Transacao t : lista) {
-                out.println(t.getTipo() + ";" + t.getValor() + ";" + t.getDescricao() + ";" + t.getData() + ";" + t.getCategoria());
+public class Arquivo_Transacoes {
+
+    private String caminho = "transacoes.csv"; 
+    //o arquivo fica salvo com esse nome;
+    public Arquivo_Transacoes() {
+    }
+    //sequencia que salva no arquivo;
+    public void salvar(List<Transacao> transacoes) throws Exception {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(caminho))) {
+            for (Transacao t : transacoes) {
+                writer.println(
+                        t.getTipo() + ";" +
+                                t.getValor() + ";" +
+                                t.getDescricao() + ";" +
+                                t.getData() + ";" +
+                                t.getCategoria()
+                );
             }
         }
     }
 
-    public List<Controle_Financeiro.Transacao> carregar() throws Exception {
+    public List<Transacao> carregar() throws Exception {
         List<Transacao> lista = new ArrayList<>();
-        File f = new File(arquivo);
-        if (!f.exists()) return lista;
-
-        try (BufferedReader br = new BufferedReader(new FileReader(arquivo))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(caminho))) {
             String linha;
-            while ((linha = br.readLine()) != null) {
-                String[] p = linha.split(";");
-                if (p[0].equals("Receita"))
-                    lista.add(new Receita(Double.parseDouble(p[1]), p[2]));
-                else
-                    lista.add(new Despesa(Double.parseDouble(p[1]), p[2]));
+            while ((linha = reader.readLine()) != null) {
+                String[] partes = linha.split(";");
+                if (partes.length < 5) continue;
+
+                String tipo = partes[0];
+                double valor = Double.parseDouble(partes[1]);
+                String descricao = partes[2];
+                LocalDate data = LocalDate.parse(partes[3]);
+                String categoria = partes[4];
+
+                if (tipo.equals("Receita")) {
+                    lista.add(new Receita(valor, descricao, data, categoria));
+                } else {
+                    lista.add(new Despesa(valor, descricao, data, categoria));
+                }
             }
         }
         return lista;
