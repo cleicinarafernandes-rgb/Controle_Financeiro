@@ -12,6 +12,7 @@ public class Main {
         } catch (Exception e) { e.printStackTrace();
         }
         //é pra interface ser criada no EDT;
+        //Event Dispatch Thread = Thread de Despacho de Eventos, é responsavel pelos eventos (Cliques, teclas e etc);
         SwingUtilities.invokeLater(() -> {
             App_Financeiro gui = new App_Financeiro(); //cria o objeto;
             gui.setVisible(true); //faz aparecer na tela do usuario;
