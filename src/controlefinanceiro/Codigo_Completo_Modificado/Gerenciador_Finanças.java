@@ -1,9 +1,11 @@
 package Controle_Financeiro;
+//tirei a estrutura de subpastas, agora é só uma;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+//Tirei os imports de Receita, Despesa e Transação, já que todas as classes estão no mesmo package;
 public class Gerenciador_Financas {
 
     private List<Transacao> transacoes;
