@@ -11,6 +11,7 @@ import java.util.List;
 public class Arquivo_Transacoes {
 
     private String caminho = "transacoes.csv";
+    //o arquivo fica salvo com esse nome;
 
     public Arquivo_Transacoes() {
     }
@@ -53,11 +54,11 @@ public class Arquivo_Transacoes {
 
                 //try-catch interno para capturar erros de conversão (valor ou data);
                 try {
-                    String tipo = partes[0];
-                    double valor = Double.parseDouble(partes[1]);
-                    String descricao = partes[2];
-                    LocalDate data = LocalDate.parse(partes[3]);
-                    String categoria = partes[4];
+                    String tipo = partes[0];      
+                    String descricao = partes[1]; 
+                    double valor = Double.parseDouble(partes[2]); 
+                    String categoria = partes[3]; 
+                    LocalDate data = LocalDate.parse(partes[4]);  
 
                     if (tipo.equalsIgnoreCase("Receita")) {
                         lista.add(new Receita(valor, descricao, data, categoria));
