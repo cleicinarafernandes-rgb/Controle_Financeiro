@@ -17,7 +17,7 @@ public abstract class Transacao {
         this.valor = valor;
         this.descricao = descricao;
         this.data = LocalDate.now();
-        this.categoria = "Geral";
+        this.categoria = "Sem Categoria";
         totalTransacoes++;
     }
 
