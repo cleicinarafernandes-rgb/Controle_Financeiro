@@ -5,8 +5,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -21,7 +19,7 @@ public class App_Financeiro extends JFrame {
     private JLabel lblSaldo = new JLabel("Saldo: R$ 0.00");
     private JTextField txtDescrição = new JTextField(10);
     private JTextField txtValor = new JTextField(5);
-    private JTextField txtBusca = new JTextField(15);
+    private JComboBox<String> cbFiltroCategoria = new JComboBox<>(new String[]{"Todos", "Fixas", "Pontuais", "Extras"});
     private JComboBox<String> cbTipo = new JComboBox<>(new String[]{"Receita", "Despesa"});
     private JComboBox<String> cbCategoria = new JComboBox<>(new String[]{"Fixas", "Pontuais", "Extras"});
 
@@ -45,7 +43,7 @@ public class App_Financeiro extends JFrame {
         pnlAdd.setBorder(BorderFactory.createTitledBorder("Nova Transação"));
 
         pnlAdd.add(new JLabel("Descrição:"));
-        pnlAdd.add(txtDescrição);
+        pnlAdd.add(txtDescricao);
 
         pnlAdd.add(new JLabel("Valor:"));
         pnlAdd.add(txtValor);
@@ -61,18 +59,15 @@ public class App_Financeiro extends JFrame {
         pnlAdd.add(btnAdd);
 
         JPanel pnlBusca = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlBusca.add(new JLabel("Filtrar:"));
-        pnlBusca.add(txtBusca);
+        pnlBusca.add(new JLabel("Filtrar por Categoria:"));
+        pnlBusca.add(cbFiltroCategoria);
 
-        txtBusca.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyReleased(KeyEvent e) {
-                String filtro = txtBusca.getText();
-                if (filtro.length() == 0) {
-                    sorter.setRowFilter(null);
-                } else {
-                    sorter.setRowFilter(RowFilter.regexFilter("(?i)" + filtro));
-                }
+        cbFiltroCategoria.addActionListener(e -> {
+            String selecionado = (String) cbFiltroCategoria.getSelectedItem();
+            if (selecionado.equals("Todos")) {
+                sorter.setRowFilter(null);
+            } else {
+                sorter.setRowFilter(RowFilter.regexFilter("^" + selecionado + "$", 3));
             }
         });
 
@@ -137,7 +132,7 @@ public class App_Financeiro extends JFrame {
     private void acaoAdicionar() {
         try {
             if (txtValor.getText().trim().isEmpty() || txtDescrição.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Por favor, preencha a descrição e o valor.");
+                JOptionPane.showMessageDialog(this, "Por favor, preencha todos os campos.");
                 return;
             }
 
@@ -155,11 +150,9 @@ public class App_Financeiro extends JFrame {
             atualizar();
             limparCampos();
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Erro: Digite um número válido no valor (ex: 100.50).");
-        } catch (IllegalArgumentException ex) {
-            JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Erro: Digite um número válido no valor.");
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro inesperado: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage());
         }
     }
 
@@ -171,10 +164,10 @@ public class App_Financeiro extends JFrame {
                 gerenciador.getTransacoes().remove(modelIndex);
                 atualizar();
             } else {
-                JOptionPane.showMessageDialog(this, "Selecione uma linha na tabela para remover.");
+                JOptionPane.showMessageDialog(this, "Selecione uma linha para remover.");
             }
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao remover: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Erro ao remover.");
         }
     }
 
@@ -187,7 +180,7 @@ public class App_Financeiro extends JFrame {
             arquivoUtil.salvar(gerenciador.getTransacoes());
             JOptionPane.showMessageDialog(this, "Dados salvos com sucesso!");
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar arquivo: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Erro ao salvar arquivo.");
         }
     }
 
@@ -200,7 +193,7 @@ public class App_Financeiro extends JFrame {
                 JOptionPane.showMessageDialog(this, "Dados carregados com sucesso!");
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar dados: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Erro ao carregar dados.");
         }
     }
 
@@ -222,9 +215,9 @@ public class App_Financeiro extends JFrame {
     }
 
     private void limparCampos() {
-        txtDescrição.setText("");
+        txtDescricao.setText("");
         txtValor.setText("");
         cbCategoria.setSelectedIndex(0);
-        txtDescrição.requestFocus();
+        txtDescricao.requestFocus();
     }
 }
