@@ -21,10 +21,10 @@ public class Arquivo_Transacoes {
             for (Transacao t : transacoes) {
                 writer.println(
                         t.getTipo() + ";" +
-                                t.getValor() + ";" +
                                 t.getDescricao() + ";" +
-                                t.getData() + ";" +
-                                t.getCategoria()
+                                t.getValor() + ";" +
+                                t.getCategoria() + ";" +
+                                t.getData()
                 );
             }
         }
