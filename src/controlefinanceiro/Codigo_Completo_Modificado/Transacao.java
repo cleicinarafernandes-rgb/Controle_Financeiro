@@ -1,4 +1,4 @@
-package controlefinanceiro;
+package controlefinanceiro.Codigo_Completo_Modificado;
 
 import java.time.LocalDate;
 
@@ -9,10 +9,10 @@ public abstract class Transacao {
     protected LocalDate data;
     protected String categoria;
 
-    
+
     private static int totalTransacoes = 0;
 
-   
+
     public Transacao(double valor, String descricao) {
         this.valor = valor;
         this.descricao = descricao;
@@ -29,14 +29,14 @@ public abstract class Transacao {
         totalTransacoes++;
     }
 
-    
+
     public abstract String getTipo();
 
-   
-    public double getValor() {                                               return valor; }
-    public String getDescricao() {                                       return descricao;                                                                               }
-    public LocalDate getData() {                                        return data;                                                                                       }
-    public String getCategoria() {                                       return categoria;                                                                               }
+
+    public double getValor() {return valor;}
+    public String getDescricao() {return descricao;}
+    public LocalDate getData() {return data;}
+    public String getCategoria() {return categoria;}
 
     public static int getTotalTransacoes() {
         return totalTransacoes;

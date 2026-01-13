@@ -5,5 +5,5 @@
  * 
  */
 module Controle_Financeiro {
-	exports controlefinanceiro;
+	requires java.desktop;
 }
