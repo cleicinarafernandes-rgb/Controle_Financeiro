@@ -1,90 +1,139 @@
 package controlefinanceiro.Codigo_Completo_Modificado;
 
+import controlefinanceiro.controller.ArquivoTransacoes;
+import controlefinanceiro.controller.GerenciadorFinancas;
+
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.time.LocalDate;
-import java.util.List;
 
 public class App_Financeiro extends JFrame {
-    private Gerenciador_Financas gerenciador = new Gerenciador_Financas();
-    private Arquivo_Transacoes arquivoUtil = new Arquivo_Transacoes();
+
+    private GerenciadorFinancas gerenciador = new GerenciadorFinancas();
+    private ArquivoTransacoes arquivoUtil; // inicializado com o usuário logado
 
     private DefaultTableModel modelo;
     private TableRowSorter<DefaultTableModel> sorter;
     private JTable tabela;
 
     private JLabel lblSaldo = new JLabel("Saldo: R$ 0.00");
-    private JTextField txtDescrição = new JTextField(10);
-    private JTextField txtValor = new JTextField(5);
+    private JTextField txtDescricao = new JTextField(12);
+    private JTextField txtValor = new JTextField(6);
     private JTextField txtBusca = new JTextField(15);
-    private JComboBox<String> cbTipo = new JComboBox<>(new String[]{"Receita", "Despesa"});
-    private JComboBox<String> cbCategoria = new JComboBox<>(new String[]{"Fixas", "Pontuais", "Extras"});
 
-    public App_Financeiro(){
+    private JComboBox<String> cbTipo =
+            new JComboBox<>(new String[]{"Receita", "Despesa"});
+
+    private JComboBox<String> cbCategoria =
+            new JComboBox<>(new String[]{"Fixas", "Pontuais", "Extras"});
+
+    public App_Financeiro() {
         setTitle("Controle Financeiro Pessoal");
-        setSize(850, 550);
+        setSize(900, 550);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout(10, 10));
+
+        // Inicializa o arquivo de transações do usuário logado
+        String usuario = SessaoUsuario.getUsuarioLogado();
+        arquivoUtil = new ArquivoTransacoes(usuario);
+
+        // Carrega transações do usuário ao abrir o sistema
+        try {
+            gerenciador.setTransacoes(arquivoUtil.carregar());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar transações do usuário.");
+        }
 
         configurarTopo();
         configurarTabela();
         configurarRodape();
 
         setLocationRelativeTo(null);
+        setVisible(true);
     }
 
+    //BOTÃO VOLTAR
+    private JLabel criarBotaoVoltar() {
+        ImageIcon img = new ImageIcon(
+                "src/controlefinanceiro/Codigo_Completo_Modificado/img/bntvolta.png"
+        );
+        Image imgEscalada = img.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
+
+        JLabel btnVoltar = new JLabel(new ImageIcon(imgEscalada));
+        btnVoltar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnVoltar.setToolTipText("Voltar para o login");
+
+        btnVoltar.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                new Login().setVisible(true);
+                dispose();
+            }
+        });
+
+        return btnVoltar;
+    }
+
+    //TOPO
     private void configurarTopo() {
-        JPanel pnlNorte = new JPanel(new GridLayout(2, 1));
+        JPanel painelTopo = new JPanel();
+        painelTopo.setLayout(new BoxLayout(painelTopo, BoxLayout.Y_AXIS));
 
-        JPanel pnlAdd = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlAdd.setBorder(BorderFactory.createTitledBorder("Nova Transação"));
+        // Painel seta
+        JPanel painelSeta = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        painelSeta.setMaximumSize(new Dimension(900, 50));
+        painelSeta.add(criarBotaoVoltar());
+        painelTopo.add(painelSeta);
+        painelTopo.add(Box.createVerticalStrut(10));
 
-        pnlAdd.add(new JLabel("Descrição:"));
-        pnlAdd.add(txtDescrição);
+        // Painel adicionar transação
+        JPanel painelAdd = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        painelAdd.setBorder(BorderFactory.createTitledBorder("Nova Transação"));
 
-        pnlAdd.add(new JLabel("Valor:"));
-        pnlAdd.add(txtValor);
+        painelAdd.add(new JLabel("Descrição:"));
+        painelAdd.add(txtDescricao);
 
-        pnlAdd.add(new JLabel("Categoria:"));
-        pnlAdd.add(cbCategoria);
+        painelAdd.add(new JLabel("Valor:"));
+        painelAdd.add(txtValor);
 
-        pnlAdd.add(new JLabel("Tipo:"));
-        pnlAdd.add(cbTipo);
+        painelAdd.add(new JLabel("Categoria:"));
+        painelAdd.add(cbCategoria);
 
-        JButton btnAdd = new JButton("Adicionar");
-        btnAdd.addActionListener(e -> acaoAdicionar());
-        pnlAdd.add(btnAdd);
+        painelAdd.add(new JLabel("Tipo:"));
+        painelAdd.add(cbTipo);
 
+        JButton btnAdicionar = new JButton("Adicionar");
+        btnAdicionar.addActionListener(e -> acaoAdicionar());
+        painelAdd.add(btnAdicionar);
+
+        painelTopo.add(painelAdd);
+
+        // Painel busca
         JPanel pnlBusca = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pnlBusca.add(new JLabel("Filtrar:"));
+        pnlBusca.add(new JLabel("Buscar:"));
         pnlBusca.add(txtBusca);
 
         txtBusca.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
                 String filtro = txtBusca.getText();
-                if (filtro.length() == 0) {
-                    sorter.setRowFilter(null);
-                } else {
-                    sorter.setRowFilter(RowFilter.regexFilter("(?i)" + filtro));
-                }
+                sorter.setRowFilter(filtro.isEmpty() ? null : RowFilter.regexFilter("(?i)" + filtro));
             }
         });
 
-        pnlNorte.add(pnlAdd);
-        pnlNorte.add(pnlBusca);
-        add(pnlNorte, BorderLayout.NORTH);
+        painelTopo.add(pnlBusca);
+
+        add(painelTopo, BorderLayout.NORTH);
     }
 
+    //TABELA
     private void configurarTabela() {
         String[] colunas = {"Tipo", "Descrição", "Valor", "Categoria", "Data"};
+
         modelo = new DefaultTableModel(colunas, 0) {
-            @Override
             public boolean isCellEditable(int row, int column) { return false; }
         };
 
@@ -93,15 +142,16 @@ public class App_Financeiro extends JFrame {
         tabela.setRowSorter(sorter);
 
         tabela.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable t, Object v, boolean s, boolean f, int r, int c) {
+            public Component getTableCellRendererComponent(
+                    JTable t, Object v, boolean s, boolean f, int r, int c) {
+
                 Component comp = super.getTableCellRendererComponent(t, v, s, f, r, c);
                 int modelRow = t.convertRowIndexToModel(r);
                 Object tipoObj = t.getModel().getValueAt(modelRow, 0);
 
                 if (tipoObj != null && !s) {
-                    String tipo = tipoObj.toString();
-                    comp.setForeground(tipo.equalsIgnoreCase("Receita") ? new Color(0, 128, 0) : Color.RED);
+                    comp.setForeground(tipoObj.toString().equalsIgnoreCase("Receita") ?
+                            new Color(0, 128, 0) : Color.RED);
                 }
                 return comp;
             }
@@ -110,6 +160,7 @@ public class App_Financeiro extends JFrame {
         add(new JScrollPane(tabela), BorderLayout.CENTER);
     }
 
+    //RODAPÉ
     private void configurarRodape() {
         JPanel pnlSul = new JPanel(new BorderLayout(10, 10));
         pnlSul.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
@@ -118,113 +169,136 @@ public class App_Financeiro extends JFrame {
         pnlSul.add(lblSaldo, BorderLayout.WEST);
 
         JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
         JButton btnRem = new JButton("Remover");
         JButton btnSal = new JButton("Salvar");
         JButton btnCar = new JButton("Carregar");
+        JButton btnResumo = new JButton("Resumo do Mês");
 
         btnRem.addActionListener(e -> acaoRemover());
         btnSal.addActionListener(e -> acaoSalvar());
         btnCar.addActionListener(e -> acaoCarregar());
+        btnResumo.addActionListener(e -> acaoResumoMes());
 
         pnlBotoes.add(btnRem);
         pnlBotoes.add(btnCar);
         pnlBotoes.add(btnSal);
-        pnlSul.add(pnlBotoes, BorderLayout.EAST);
+        pnlBotoes.add(btnResumo);
 
+        pnlSul.add(pnlBotoes, BorderLayout.EAST);
         add(pnlSul, BorderLayout.SOUTH);
     }
 
+    //AÇÕES 
     private void acaoAdicionar() {
         try {
-            if (txtValor.getText().trim().isEmpty() || txtDescrição.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Por favor, preencha a descrição e o valor.");
+            if (txtDescricao.getText().trim().isEmpty() || txtValor.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Preencha descrição e valor.");
                 return;
             }
 
-            double v = Double.parseDouble(txtValor.getText().replace(",", "."));
-            String desc = txtDescrição.getText();
+            double valor = Double.parseDouble(txtValor.getText().replace(",", "."));
+            String desc = txtDescricao.getText();
             String cat = (String) cbCategoria.getSelectedItem();
             LocalDate data = LocalDate.now();
 
             if (cbTipo.getSelectedItem().equals("Receita")) {
-                gerenciador.adicionarReceita(v, desc, data, cat);
+                gerenciador.adicionarReceita(valor, desc, data, cat);
             } else {
-                gerenciador.adicionarDespesa(v, desc, data, cat);
+                gerenciador.adicionarDespesa(valor, desc, data, cat);
             }
 
             atualizar();
             limparCampos();
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Erro: Digite um número válido no valor (ex: 100.50).");
-        } catch (IllegalArgumentException ex) {
-            JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage());
+
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro inesperado: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Erro: " + ex.getMessage());
         }
     }
 
     private void acaoRemover() {
-        try {
-            int row = tabela.getSelectedRow();
-            if (row != -1) {
-                int modelIndex = tabela.convertRowIndexToModel(row);
-                gerenciador.getTransacoes().remove(modelIndex);
-                atualizar();
-            } else {
-                JOptionPane.showMessageDialog(this, "Selecione uma linha na tabela para remover.");
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Erro ao remover: " + e.getMessage());
+        int row = tabela.getSelectedRow();
+        if (row != -1) {
+            int index = tabela.convertRowIndexToModel(row);
+            gerenciador.getTransacoes().remove(index);
+            atualizar();
         }
     }
 
     private void acaoSalvar() {
         try {
-            if (gerenciador.getTransacoes().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Não há dados para salvar.");
-                return;
-            }
             arquivoUtil.salvar(gerenciador.getTransacoes());
-            JOptionPane.showMessageDialog(this, "Dados salvos com sucesso!");
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar arquivo: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Dados salvos!");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar.");
         }
     }
 
     private void acaoCarregar() {
         try {
-            List<Transacao> carregadas = arquivoUtil.carregar();
-            if (carregadas != null) {
-                gerenciador.setTransacoes(carregadas);
-                atualizar();
-                JOptionPane.showMessageDialog(this, "Dados carregados com sucesso!");
-            }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Erro ao carregar dados: " + ex.getMessage());
+            gerenciador.setTransacoes(arquivoUtil.carregar());
+            atualizar();
+            JOptionPane.showMessageDialog(this, "Dados carregados!");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao carregar.");
         }
+    }
+
+    private void acaoResumoMes() {
+        String mesStr = JOptionPane.showInputDialog("Digite o mês (1 a 12):");
+        String anoStr = JOptionPane.showInputDialog("Digite o ano (ex: 2026):");
+
+        if (mesStr == null || anoStr == null) return;
+
+        int mes = Integer.parseInt(mesStr);
+        int ano = Integer.parseInt(anoStr);
+
+        var lista = gerenciador.filtrarPorMes(mes, ano);
+
+        if (lista.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Nenhuma transação nesse mês.");
+            return;
+        }
+
+        double totalReceitas = 0;
+        double totalDespesas = 0;
+
+        for (var t : lista) {
+            if (t.getTipo().equals("Receita")) totalReceitas += t.getValor();
+            else totalDespesas += t.getValor();
+        }
+
+        double saldo = totalReceitas - totalDespesas;
+
+        JOptionPane.showMessageDialog(this,
+                "Resumo do mês:\n\n" +
+                        "Receitas: R$ " + totalReceitas +
+                        "\nDespesas: R$ " + totalDespesas +
+                        "\nSaldo: R$ " + saldo
+        );
     }
 
     private void atualizar() {
         modelo.setRowCount(0);
-        for (Transacao t : gerenciador.getTransacoes()) {
+
+        for (var t : gerenciador.getTransacoes()) {
             modelo.addRow(new Object[]{
                     t.getTipo(),
                     t.getDescricao(),
                     String.format("%.2f", t.getValor()),
                     t.getCategoria(),
-                    t.getData(),
+                    t.getData()
             });
         }
 
-        double saldoTotal = gerenciador.calcularSaldo();
-        lblSaldo.setText(String.format("Saldo Atual: R$ %.2f", saldoTotal));
-        lblSaldo.setForeground(saldoTotal >= 0 ? new Color(0, 128, 0) : Color.RED);
+        double saldo = gerenciador.calcularSaldo();
+        lblSaldo.setText(String.format("Saldo Atual: R$ %.2f", saldo));
+        lblSaldo.setForeground(saldo >= 0 ? new Color(0, 128, 0) : Color.RED);
     }
 
     private void limparCampos() {
-        txtDescrição.setText("");
+        txtDescricao.setText("");
         txtValor.setText("");
         cbCategoria.setSelectedIndex(0);
-        txtDescrição.requestFocus();
     }
 }

@@ -22,15 +22,15 @@ public class Login extends JFrame {
         JPanel painelEsquerdo = new JPanel(new BorderLayout());
         painelEsquerdo.setBackground(new Color(20, 20, 20));
 
-        JLabel tituloSistema = new JLabel("Controle Financeiro", SwingConstants.CENTER);
+        JLabel tituloSistema = new JLabel("Controle Financeiro Pessoal", SwingConstants.CENTER);
         tituloSistema.setFont(new Font("Segoe UI", Font.BOLD, 26));
         tituloSistema.setForeground(Color.WHITE);
 
         JLabel subtitulo = new JLabel("Organize sua vida financeira", SwingConstants.CENTER);
         subtitulo.setForeground(Color.LIGHT_GRAY);
 
-        JPanel textos = new JPanel(new GridLayout(2,1));
-        textos.setBackground(new Color(20,20,20));
+        JPanel textos = new JPanel(new GridLayout(2, 1));
+        textos.setBackground(new Color(20, 20, 20));
         textos.add(tituloSistema);
         textos.add(subtitulo);
 
@@ -85,7 +85,7 @@ public class Login extends JFrame {
         btnEntrar.addActionListener(e -> fazerLogin());
         btnCadastroLink.addActionListener(e -> {
             new Cadastro().setVisible(true);
-            dispose(); // fecha o login
+            dispose();
         });
     }
 
@@ -107,6 +107,7 @@ public class Login extends JFrame {
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
     }
 
+    // LOGIN (APENAS AUTENTICA E ABRE O SISTEMA)
     private void fazerLogin() {
         String usuario = campoUsuario.getText();
         String senha = new String(campoSenha.getPassword());
@@ -114,14 +115,24 @@ public class Login extends JFrame {
         try (Scanner sc = new Scanner(new File(ARQUIVO))) {
             while (sc.hasNextLine()) {
                 String[] dados = sc.nextLine().split(";");
+
                 if (dados[0].equals(usuario) && dados[1].equals(senha)) {
+
+                    // salva usuário na sessão
+                    SessaoUsuario.login(usuario);
+
                     JOptionPane.showMessageDialog(this, "Login realizado com sucesso!");
+
+                    // abre SOMENTE o sistema principal
                     new App_Financeiro().setVisible(true);
+
                     dispose();
                     return;
                 }
             }
+
             JOptionPane.showMessageDialog(this, "Usuário ou senha inválidos!");
+
         } catch (Exception e) {
             e.printStackTrace();
         }
